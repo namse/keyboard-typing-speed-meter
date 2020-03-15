@@ -1,6 +1,10 @@
 import ILedMatrix, { LedMatrixOption } from "./ILedMatrix";
 import CanvasLedMatrix from "./CanvasLedMatrix";
 import { Colors } from "./Color";
+import SpeedMeterRenderer from "./SpeedMeterRenderer/SpeedMeterRenderer";
+import ISpeedMeterRenderer from "./SpeedMeterRenderer/ISpeedMeterRenderer";
+import ISpeedMeter from "./SpeedMeter/ISpeedMeter";
+import SpeedMeter from "./SpeedMeter/SpeedMeter";
 
 const canvas = document.createElement('canvas');
 canvas.width = 1024;
@@ -14,50 +18,27 @@ const option: LedMatrixOption = {
 };
 
 const ledMatrix: ILedMatrix = new CanvasLedMatrix(canvas, option);
+const speedMeter: ISpeedMeter = new SpeedMeter(1000);
+const speedMeterRenderer: ISpeedMeterRenderer = new SpeedMeterRenderer(ledMatrix, option, speedMeter);
 
-const cellCount = 10;
-const cellHeight = 4;
-const cellBorderWidth = 1;
-const outMargin = 1;
-const outBorder = 2;
+// // Auto Counter
 
-const borderInnerWidth = option.width - (2 * outMargin);
-const borderInnerHeight = option.height - (2 * outMargin);
+// setInterval(() => {
+//   speedMeter.addCount();
+// }, 100);
 
-const startX = outMargin;
-const startY = outMargin;
-const cellWidth = borderInnerWidth - (2 * outMargin);
+document.addEventListener('keydown', () => {
+  speedMeter.addCount();
+});
 
-const cellStartX = startX + outMargin;
-const cellStartY = startY + outMargin + 10;
-
-setInterval(() => {
-  ledMatrix.drawRect(
-    outMargin, outMargin,
-    borderInnerWidth, borderInnerHeight,
-    Colors.WHITE,
-  );
-
-  for (let cellIndex = 0; cellIndex < cellCount; cellIndex += 1) {
-    const cellX = cellStartX;
-    const cellY = cellStartY + (cellHeight + cellBorderWidth) * cellIndex;
-    const color = Colors.RED;
-    ledMatrix.drawRect(cellX, cellY, cellWidth, cellHeight, color);
+function run() {
+  function onAnimationFrame() {
+    speedMeterRenderer.render();
+    ledMatrix.sync();
+    requestAnimationFrame(onAnimationFrame);
   }
 
-  ledMatrix.drawRectBorder(2, 2, borderInnerWidth - 2, 9, 1, Colors.YELLOW);
-  ledMatrix.drawRect(3, 3, borderInnerWidth - 4, 7, Colors.BLACK);
-
-  for (let i = 0; i < 4; i += 1) {
-    const x = 5 + i * (5 + 1);
-    const y = 3;
-    ledMatrix.drawNineSegment5_7(x, y, i, Colors.RED);
-  }
-}, 50);
-
-
-function onAnimationFrame() {
-  ledMatrix.sync();
-  requestAnimationFrame(onAnimationFrame);
+  onAnimationFrame();
 }
-onAnimationFrame();
+
+run();
